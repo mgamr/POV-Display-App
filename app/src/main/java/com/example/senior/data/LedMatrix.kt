@@ -1,11 +1,15 @@
 package com.example.senior.data
 
-import kotlinx.serialization.Serializable
+//import kotlinx.serialization.Serializable
+//
+//@Serializable
+//data class LedMatrix(
+//    val frame_size: Int,
+//    val frame_num: Int,
+//    val current_frame: Int,
+//    val led_data: List<Int>
+//)
 
-@Serializable
 data class LedMatrix(
-    val frame_size: Int,
-    val frame_num: Int,
-    val current_frame: Int,
-    val led_data: List<Int>
+    val ledMatrix: List<List<Long>>
 )

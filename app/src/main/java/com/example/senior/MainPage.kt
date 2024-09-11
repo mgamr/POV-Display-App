@@ -6,15 +6,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.senior.networking.PostViewModel
-
-
-//@Composable
-//fun MainPage(modifier: Modifier = Modifier){
-//    Button(onClick = { sendData() }) {
-//        Text("Sin")
-//    }
-//}
 
 
 @Composable
@@ -30,26 +21,34 @@ fun LedControlScreen(viewModel: PostViewModel = viewModel()) {
             Text(text = "LED Off")
         }
 
-        Button(onClick = {
-            viewModel.ledArrayOn(context, "images/empty.json")
-            viewModel.ledArrayOn(context, "images/mario.json")
-        }) {
+        Button(onClick = { viewModel.sendArrayAsPackets(context, "jsons/mario.json") }) {
             Text(text = "Mario")
         }
 
-        Button(onClick = { viewModel.ledArrayOn(context, "images/small_test.json") }) {
+        Button(onClick = { viewModel.sendArrayAsPackets(context, "jsons/small_test.json") }) {
             Text(text = "Small Test")
         }
 
-        Button(onClick = {
-            viewModel.ledArrayOn(context, "images/empty.json")
-            viewModel.ledArrayOn(context, "images/other.json")
-        }) {
-            Text(text = "Other")
+        Button(onClick = { viewModel.sendArrayAsPackets(context, "jsons/other.json") }) {
+            Text(text = "Sin")
         }
 
-        Button(onClick = { viewModel.ledArrayOn(context, "images/empty.json") }) {
+        Button(onClick = { viewModel.sendArrayAsPackets(context, "jsons/empty.json") }) {
             Text(text = "Empty")
         }
+
+//        Button(onClick = {  }) {
+//            Text(text = "Choose image")
+//        }
+
+//        Button(onClick = {
+//            viewModel.convertImageToArray(context)
+//            print("Json converted")
+//            val jsonFile = File(context.filesDir, "mario.json")
+//            viewModel.ledArrayOn(context, jsonFile)
+//        }) {
+//            Text(text = "Show")
+//        }
     }
 }
+
