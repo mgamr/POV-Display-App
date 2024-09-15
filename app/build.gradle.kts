@@ -89,6 +89,9 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.androidx.navigation.compose)
+//    implementation ("androidx.navigation:navigation-compose:2.7.6")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

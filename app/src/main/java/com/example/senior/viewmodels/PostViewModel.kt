@@ -1,12 +1,15 @@
-package com.example.senior
+package com.example.senior.viewmodels
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.senior.data.LedMatrix
 import com.example.senior.data.LedRequestBody
 import com.example.senior.networking.PostApi
 import com.google.gson.Gson
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.InputStreamReader
@@ -14,6 +17,18 @@ import java.io.InputStreamReader
 class PostViewModel : ViewModel() {
 
     private val postApi = PostApi.instance
+
+    private var succsessCount = 0
+
+    fun motorStop() {
+        viewModelScope.launch {
+            try {
+                postApi.motorStop()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     fun ledOn() {
         viewModelScope.launch {
@@ -56,7 +71,57 @@ class PostViewModel : ViewModel() {
         }
     }
 
-    private suspend fun sendRowWithRetry(row: List<Long>, index: Int, maxRetries: Int = 3, delayMillis: Long = 1000) {
+    fun sendArrayAsPackets(context: Context, ledMatrix: List<List<Int>>) {
+        Log.d("packets", ledMatrix.size.toString())
+
+        viewModelScope.launch {
+            ledMatrix.mapIndexed { index, row ->
+                async { sendRowWithRetry(row, index) }
+            }.awaitAll()
+        }
+    }
+
+    fun sendArrayAsPackets2(context: Context, ledMatrix: List<List<Int>>) {
+        viewModelScope.launch {
+            sendstartend("start")
+            Log.d("blla",ledMatrix.toString())
+            ledMatrix.mapIndexed { index, row ->
+                async { sendRowWithRetry2(row, index) }
+            }.awaitAll()
+            sendstartend("end")
+            if(succsessCount != 36){
+                Log.e("eroor","somthing not sent")
+            }else{
+                Log.e("eroor","sent")
+                succsessCount = 0
+            }
+        }
+    }
+
+    private suspend fun sendstartend(text: String){
+        try {
+            val response = postApi.start(text)
+
+            if (response.isSuccessful) {
+                Log.d("sent",response.message())
+            } else {
+                println("Error sending row (attempt ) with index : ${response.code()}")
+            }
+
+        } catch (e: Exception) {
+            println("Exception on attempt  for index : ${e.message}")
+        }
+    }
+
+    private suspend fun sendRowWithRetry2(row: List<Int>, index: Int) {
+        try {
+            val response = postApi.ledArrayOn2(row)
+        } catch (e: Exception) {
+            println("Exception on attempt  for index : ${e.message}")
+        }
+    }
+
+    private suspend fun sendRowWithRetry(row: List<Int>, index: Int, maxRetries: Int = 3, delayMillis: Long = 10) {
         var attempt = 0
         var success = false
 
@@ -109,7 +174,6 @@ class PostViewModel : ViewModel() {
         val reader = InputStreamReader(inputStream)
         return Gson().fromJson(reader, LedMatrix::class.java)
     }
-
 
 
 //    fun ledArrayOn(context: Context, file: File) {

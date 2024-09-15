@@ -11,5 +11,5 @@ package com.example.senior.data
 //)
 
 data class LedMatrix(
-    val ledMatrix: List<List<Long>>
+    val ledMatrix: List<List<Int>>
 )
