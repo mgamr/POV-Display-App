@@ -10,18 +10,6 @@ object PostApi {
             ignoreUnknownKeys = true
         }
     }
-//    private val retrofit: Retrofit by lazy {
-//        Retrofit.Builder()
-//            .baseUrl(Constants.PostAPI.URL)
-//            .addConverterFactory(
-//                json.asConverterFactory("application/json; charset=UTF8".toMediaTypeOrNull()!!)
-//            )
-//            .build()
-//    }
-
-//    val instance: PostService by lazy {
-//        retrofit.create(PostService::class.java)
-//    }
 
     val instance: PostService by lazy {
         Retrofit.Builder()

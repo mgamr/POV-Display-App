@@ -415,7 +415,7 @@ fun MyNavHost(context: Context, navController: NavHostController, postViewModel:
             GraphPage(map)
         }
         composable(Screens.Image.screen) {
-            GridView(context, postViewModel, graphViewModel)
+            GridView(context, postViewModel, graphViewModel, map)
         }
     }
 }

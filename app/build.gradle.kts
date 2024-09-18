@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("com.chaquo.python")
+//    id("com.chaquo.python")
 }
 
 android {
@@ -20,20 +20,20 @@ android {
             useSupportLibrary = true
         }
 
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
+//        ndk {
+//            abiFilters += listOf("arm64-v8a", "x86_64")
+//        }
     }
 
-    chaquopy {
-        defaultConfig {
-            buildPython("C:/Users/Mari/AppData/Local/Microsoft/WindowsApps/python.exe")
-
-            pip {
-                install("pillow")
-            }
-        }
-    }
+//    chaquopy {
+//        defaultConfig {
+//            buildPython("C:/Users/Mari/AppData/Local/Microsoft/WindowsApps/python.exe")
+//
+//            pip {
+//                install("pillow")
+//            }
+//        }
+//    }
 
     buildTypes {
         release {

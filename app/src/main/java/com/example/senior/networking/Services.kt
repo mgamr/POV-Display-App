@@ -1,6 +1,5 @@
 package com.example.senior.networking
 
-import com.example.senior.data.LedRequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -23,9 +22,9 @@ interface PostService {
 //    @POST("/ledArray")
 //    suspend fun ledArrayOn(@Body body: LedRequestBody): Unit
 
-    @Headers("Content-Type: application/json")
-    @POST("/ledArray")
-    suspend fun ledArrayOn(@Body body: LedRequestBody): Response<Unit>
+//    @Headers("Content-Type: application/json")
+//    @POST("/ledArray")
+//    suspend fun ledArrayOn(@Body body: LedRequestBody): Response<Unit>
 
     @POST("/motorStop")
     suspend fun motorStop(): Unit
@@ -39,5 +38,5 @@ interface PostService {
 
     @Headers("Content-Type: application/json")
     @POST("/post-data")
-    suspend fun ledArrayOn2(@Body body: List<Int>): Response<Unit>
+    suspend fun ledArrayOn(@Body body: List<Int>): Response<Unit>
 }

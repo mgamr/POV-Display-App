@@ -3,7 +3,6 @@ package com.example.senior.pages
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -44,24 +42,20 @@ import com.example.senior.ui.theme.LightLightPink
 import com.example.senior.viewmodels.GraphViewModel
 import com.example.senior.viewmodels.PostViewModel
 
-//@Composable
-//fun GraphPage() {
-//    Text("Graph")
-//}
-
 @SuppressLint("RememberReturnType")
 @Composable
-fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: GraphViewModel) {
+fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: GraphViewModel, map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>) {
     val imageList = remember {
         mutableStateListOf(
-            GridElement("Mario", R.drawable.mario, resizeImage(R.drawable.mario, context)),
-            GridElement("<3", R.drawable.mari, resizeImage(R.drawable.mari, context)),
-            GridElement("Jiqi", R.drawable.jiqi, resizeImage(R.drawable.jiqi, context)),
-            GridElement("sin(x)", R.drawable.sinx, resizeImage(R.drawable.sinx, context)),
-            GridElement("jando", R.drawable.jondo, resizeImage(R.drawable.jondo, context)),
-            GridElement("sxila", R.drawable.sxila, resizeImage(R.drawable.sxila, context)),
-            GridElement("kvashuna", R.drawable.kvasho, resizeImage(R.drawable.kvasho, context)),
-            GridElement("tazuka", R.drawable.tazo, resizeImage(R.drawable.tazo, context))
+            GridElement("Mario", R.drawable.mario, graphViewModel.resizeImage(R.drawable.mario, context)),
+            GridElement("Mario2", R.drawable.mario2, graphViewModel.resizeImage(R.drawable.mario2, context)),
+            GridElement("<3", R.drawable.mari, graphViewModel.resizeImage(R.drawable.mari, context)),
+            GridElement("Jiqi", R.drawable.jiqi, graphViewModel.resizeImage(R.drawable.jiqi, context)),
+            GridElement("sin(x)", R.drawable.sinx, graphViewModel.resizeImage(R.drawable.sinx, context)),
+            GridElement("jando", R.drawable.jondo, graphViewModel.resizeImage(R.drawable.jondo, context)),
+            GridElement("sxila", R.drawable.sxila, graphViewModel.resizeImage(R.drawable.sxila, context)),
+            GridElement("kvashuna", R.drawable.kvasho, graphViewModel.resizeImage(R.drawable.kvasho, context)),
+            GridElement("tazuka", R.drawable.tazo, graphViewModel.resizeImage(R.drawable.tazo, context))
         )
     }
 
@@ -72,7 +66,7 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
                 val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
                 val resizedImage = Bitmap.createScaledBitmap(bitmap, 432, 432, true).asImageBitmap()
 
-                val myMatrix = graphViewModel.getPixelFromImage1(resizedImage, context)
+                val myMatrix = graphViewModel.getPixelFromImage(map, resizedImage)
                 postViewModel.sendArrayAsPackets(context, myMatrix)
             }
         }
@@ -95,7 +89,7 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
                             )
                             .show()
 
-                        val myMatrix = graphViewModel.getPixelFromImage1(imageList[index].imageBitmap, context)
+                        val myMatrix = graphViewModel.getPixelFromImage(map, imageList[index].imageBitmap)
                         postViewModel.sendArrayAsPackets(context, myMatrix)
                     },
                 colors = CardDefaults.cardColors(
@@ -134,13 +128,6 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable {
-//                        Toast
-//                            .makeText(
-//                                context,
-//                                "add selected..",
-//                                Toast.LENGTH_SHORT
-//                            )
-//                            .show()
                         pickImageLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
@@ -175,12 +162,5 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
             }
         }
     }
-}
-
-
-fun resizeImage(resourceId: Int, context: Context): ImageBitmap {
-    val originalBitmap = BitmapFactory.decodeResource(context.resources, resourceId)
-    val scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, 432, 432, true)
-    return scaledBitmap.asImageBitmap()
 }
 
