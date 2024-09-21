@@ -2,8 +2,7 @@ package com.example.senior.pages
 
 import android.graphics.Bitmap
 import android.graphics.Paint
-import android.util.Log
-import androidx.compose.foundation.Canvas
+import android.graphics.Typeface
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,8 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,13 +44,9 @@ import kotlin.math.roundToInt
 
 @Composable
 fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewModel: GraphViewModel = viewModel(), postViewModel: PostViewModel = viewModel()) {
+    val context = LocalContext.current
     var text by remember { mutableStateOf("") }
-
     val equationsHistory = remember { mutableStateListOf<String>() }
-
-//    val imageBitmap = ImageBitmap.imageResource(id = R.drawable.marioreal)
-//    val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
-
     var pointsData by remember { mutableStateOf<List<Point>>(listOf()) }
 
     Column(
@@ -61,12 +54,6 @@ fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewMo
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//        Button(onClick = {
-//            Log.d("post", myMatrix.toString())
-//            postViewModel.sendArrayAsPackets(context, myMatrix) }
-//        ) {
-//            Text("Send")
-//        }
         Box(
             modifier = Modifier
                 .padding(10.dp)
@@ -76,7 +63,7 @@ fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewMo
 //            val pointsData = graphViewModel.evaluateEquation("y=x+1")
 //            LineChartScreen(pointsData = pointsData)
 //            LineChartScreen()
-            Graph(pointsData, map, graphViewModel, postViewModel)
+            Graph(pointsData, map, graphViewModel)
         }
 
         LazyColumn (
@@ -102,6 +89,12 @@ fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewMo
                     if (text.isNotEmpty()) {
                         equationsHistory.add(text)
                         pointsData = graphViewModel.evaluateEquation(text)
+
+                        val imageBitmap = generateGraphBitmap(pointsData)
+
+                        val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
+                        postViewModel.sendArrayAsPackets(context, myMatrix)
+
                         text = ""
                     }
                 },
@@ -118,140 +111,100 @@ fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewMo
     }
 }
 
+fun generateGraphBitmap(points: List<Point>): ImageBitmap {
+    val graphWidth = 800f
+    val graphHeight = 800f
+    val padding = 50f
+
+    val targetWidth = 432
+    val targetHeight = 432
+
+    val bitmap = Bitmap.createBitmap(
+        graphWidth.toInt(),
+        graphHeight.toInt(),
+        Bitmap.Config.ARGB_8888
+    )
+    val canvas = android.graphics.Canvas(bitmap)
+    val paint = Paint().apply {
+        isAntiAlias = true
+        color = android.graphics.Color.CYAN
+        strokeWidth = 20f
+        style = Paint.Style.STROKE
+    }
+
+    val maxX = points.maxOf { it.x }
+    val minX = points.minOf { it.x }
+    val minY = points.minOf { it.y }
+    val maxY = points.maxOf { it.y }
+
+    val scaleX = (graphWidth - 2 * padding) / (maxX - minX)
+    val scaleY = (graphHeight - 2 * padding) / (maxY - minY)
+
+    val paddingX = padding - minX * scaleX
+    val paddingY = padding - minY * scaleY
+
+    val androidPath = android.graphics.Path()
+
+    points.forEachIndexed { index, point ->
+        val x = paddingX + point.x * scaleX
+        val y = graphHeight - (paddingY + point.y * scaleY) // Flip y-axis
+
+        if (index == 0) {
+            androidPath.moveTo(x, y)
+        } else {
+            androidPath.lineTo(x, y)
+        }
+    }
+
+    canvas.drawPath(androidPath, paint)
+
+    paint.apply {
+        color = android.graphics.Color.RED
+        strokeWidth = 20f
+    }
+    canvas.drawLine(padding - 50, graphHeight - paddingY, graphWidth - padding + 50, graphHeight - paddingY, paint) // X-axis
+    canvas.drawLine(paddingX, graphHeight - padding + 50, paddingX, padding - 50, paint) // Y-axis
+
+    paint.apply {
+        textSize = 70f
+        style = Paint.Style.FILL
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    }
+    canvas.drawText("${maxY.roundToInt()}", paddingX + 25f, padding + 25f, paint)  // Top-left Y label
+    canvas.drawText("${minY.roundToInt()}", paddingX + 25f, graphWidth - padding, paint)  // Bottom-left Y label
+    canvas.drawText("${minX.roundToInt()}", padding - 50f, graphHeight - paddingY - 30f, paint)  // Bottom-left X label
+    canvas.drawText("${maxX.roundToInt()}", graphHeight - padding - 25f, graphHeight - paddingY - 30f, paint)  // Bottom-right X label
+
+    val resizedBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+
+    return resizedBitmap.asImageBitmap()
+}
+
+
 @Composable
 fun Graph(
     points: List<Point>,
     map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>,
     graphViewModel: GraphViewModel = viewModel(),
-    postViewModel: PostViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
-    // Define the dimensions of the graph
     val graphWidth = 800f
     val graphHeight = 800f
     val padding = 50f
 
-    // Define the target dimensions for the resized bitmap
-    val targetWidth = 432
-    val targetHeight = 432
-
-    // Create the paths for Compose and Android
     val composePath = Path()
-    val androidPath = android.graphics.Path()
-
-    // Variables for axes and scaling
-    var paddingX = padding
-    var paddingY = padding
-    var scaleX = 1f
-    var scaleY = 1f
-    var maxX = 0f
-    var minX = 0f
-    var maxY = 0f
-    var minY = 0f
-
-    // Create a mutable state to hold the ImageBitmap
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
-    // Ensure points are available before trying to draw
     if (points.isNotEmpty()) {
         LaunchedEffect(points) {
-            // Create a bitmap to draw the graph
-            val bitmap = Bitmap.createBitmap(
-                graphWidth.toInt(),
-                graphHeight.toInt(),
-                Bitmap.Config.ARGB_8888
-            )
-
-            // Create an Android Canvas using the Bitmap
-            val canvas = android.graphics.Canvas(bitmap)
-
-            // Set up Paint for Android Canvas drawing
-            val paint = Paint().apply {
-                isAntiAlias = true
-                color = android.graphics.Color.CYAN
-                strokeWidth = 20f
-                style = Paint.Style.STROKE
-            }
-
-            // Calculate scales for X and Y axes based on points
-            maxX = points.maxOf { it.x }
-            minX = points.minOf { it.x }
-            minY = points.minOf { it.y }
-            maxY = points.maxOf { it.y }
-
-            scaleX = (graphWidth - 2 * padding) / (maxX - minX)
-            scaleY = (graphHeight - 2 * padding) / (maxY - minY)
-
-            paddingX = padding - minX * scaleX
-            paddingY = padding - minY * scaleY
-
-            // Create the path for both Compose and Android Canvas
-            points.forEachIndexed { index, point ->
-                val x = paddingX + point.x * scaleX
-                val y = graphHeight - (paddingY + point.y * scaleY) // Flip y-axis
-
-                if (index == 0) {
-                    // Move to the first point in both paths
-                    composePath.moveTo(x, y)
-                    androidPath.moveTo(x, y)
-                } else {
-                    // Line to the next point in both paths
-                    composePath.lineTo(x, y)
-                    androidPath.lineTo(x, y)
-                }
-            }
-
-            // Draw the graph path on Android's Canvas
-            canvas.drawPath(androidPath, paint)
-
-            // Draw the X-axis and Y-axis on the Android Canvas
-            paint.apply {
-                color = android.graphics.Color.RED
-                strokeWidth = 20f
-            }
-            canvas.drawLine(padding - 50, graphHeight - paddingY, graphWidth - padding + 50, graphHeight - paddingY, paint) // X-axis
-            canvas.drawLine(paddingX, graphHeight - padding + 50, paddingX, padding - 50, paint) // Y-axis
-
-            // Draw axis labels on the Android Canvas
-            paint.apply {
-                textSize = 70f
-                style = Paint.Style.FILL
-                typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
-            }
-            canvas.drawText("${maxY.roundToInt()}", paddingX + 25f, padding + 25f, paint)  // Top-left Y label
-            canvas.drawText("${minY.roundToInt()}", paddingX + 25f, graphWidth - padding, paint)  // Bottom-left Y label
-            canvas.drawText("${minX.roundToInt()}", padding - 50f, graphHeight - paddingY - 30f, paint)  // Bottom-left X label
-            canvas.drawText("${maxX.roundToInt()}", graphHeight - padding - 25f, graphHeight - paddingY - 30f, paint)  // Bottom-right X label
-
-            // Resize the Bitmap to 432x432
-            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
-
-            // Convert the resized Bitmap to an ImageBitmap
-            imageBitmap = resizedBitmap.asImageBitmap()
+            imageBitmap = generateGraphBitmap(points)
         }
 
-        // Drawing the Compose Path in Jetpack Compose Canvas
-        Canvas(modifier = modifier.size(graphWidth.dp, graphHeight.dp)) {
-            drawPath(
-                path = composePath,
-                color = Color.Cyan,
-                style = Stroke(width = 20f)
-            )
-        }
-
-        val context = LocalContext.current
-        // Display the generated ImageBitmap
         imageBitmap?.let {
-            Image(bitmap = it, contentDescription = "Graph Image", modifier = modifier.size(targetWidth.dp, targetHeight.dp))
-
-            val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap!!)
-            postViewModel.sendArrayAsPackets(context, myMatrix)
-            Log.d("screenshot", myMatrix.toString())
-            Log.d("screenshot", imageBitmap!!.toPixelMap()[100,100].toString())
+            Image(bitmap = it, contentDescription = "Graph Image", modifier = modifier.size(432.dp, 432.dp))
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

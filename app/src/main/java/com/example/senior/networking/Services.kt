@@ -35,8 +35,7 @@ interface PostService {
         @Field("started") col: String
     ): Response<Unit>
 
-
-    @Headers("Content-Type: application/json")
+    @Headers("Content-Type: text/plain")
     @POST("/post-data")
     suspend fun ledArrayOn(@Body body: List<Int>): Response<Unit>
 }

@@ -151,14 +151,25 @@ class GraphViewModel : ViewModel() {
             listOf(index) + list
         }
 
-        val  res =result.flatten()
+        val res = result.flatten()
+//            .chunked(37) // Break the list into chunks of 120
+//            .take(360)
             .chunked(111) // Break the list into chunks of 120
             .take(120)
-        for(i in res){
+        for(i in result){
             Log.d("list2", i.toString())
-
         }
-        //        for(i in reshapedList){
+        Log.d("list2", result.size.toString())
+        Log.d("list2", result[0].size.toString())
+
+        for(i in res) {
+            Log.d("list3", i.toString())
+        }
+        Log.d("list3", res.size.toString())
+        Log.d("list3", res[0].size.toString())
+
+
+//        for(i in reshapedList){
 //            Log.d("list", i.toString())
 //
 //        }

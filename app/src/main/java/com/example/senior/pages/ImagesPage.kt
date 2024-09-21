@@ -55,7 +55,8 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
             GridElement("jando", R.drawable.jondo, graphViewModel.resizeImage(R.drawable.jondo, context)),
             GridElement("sxila", R.drawable.sxila, graphViewModel.resizeImage(R.drawable.sxila, context)),
             GridElement("kvashuna", R.drawable.kvasho, graphViewModel.resizeImage(R.drawable.kvasho, context)),
-            GridElement("tazuka", R.drawable.tazo, graphViewModel.resizeImage(R.drawable.tazo, context))
+            GridElement("tazuka", R.drawable.tazo, graphViewModel.resizeImage(R.drawable.tazo, context)),
+            GridElement("lekisha", R.drawable.lekisha, graphViewModel.resizeImage(R.drawable.lekisha, context))
         )
     }
 
