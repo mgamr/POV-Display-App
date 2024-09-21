@@ -8,11 +8,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -22,6 +27,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,14 +49,23 @@ import com.example.senior.viewmodels.PostViewModel
 import kotlin.math.roundToInt
 
 @Composable
-fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewModel: GraphViewModel = viewModel(), postViewModel: PostViewModel = viewModel()) {
+fun GraphPage(
+    map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>,
+    graphViewModel: GraphViewModel = viewModel(),
+    postViewModel: PostViewModel = viewModel()
+) {
     val context = LocalContext.current
     var text by remember { mutableStateOf("") }
     val equationsHistory = remember { mutableStateListOf<String>() }
     var pointsData by remember { mutableStateOf<List<Point>>(listOf()) }
 
+    var start by remember { mutableFloatStateOf(-10f) }
+    var end by remember { mutableFloatStateOf(10f) }
+
     Column(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -66,7 +81,105 @@ fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewMo
             Graph(pointsData, map, graphViewModel)
         }
 
-        LazyColumn (
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = {
+                    start -= 1f
+                    end -= 1f
+                    pointsData = graphViewModel.evaluateEquation(
+                        equationsHistory.lastOrNull() ?: "",
+                        start,
+                        end
+                    )
+
+                    val imageBitmap = generateGraphBitmap(pointsData)
+
+                    val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
+                    postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
+                },
+                colors = ButtonDefaults.buttonColors(Pink)
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowLeft,
+                    contentDescription = null,
+                    tint = Color.DarkGray
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Button(
+                onClick = {
+                    start -= 1f
+                    end += 1f
+                    pointsData = graphViewModel.evaluateEquation(
+                        equationsHistory.lastOrNull() ?: "",
+                        start,
+                        end
+                    )
+
+                    val imageBitmap = generateGraphBitmap(pointsData)
+                    val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
+                    postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
+                },
+                colors = ButtonDefaults.buttonColors(Pink)
+            ) {
+                Text(text = "Zoom Out", color = Color.DarkGray)
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Button(
+                onClick = {
+                    start += 1f
+                    end -= 1f
+                    pointsData = graphViewModel.evaluateEquation(
+                        equationsHistory.lastOrNull() ?: "",
+                        start,
+                        end
+                    )
+
+                    val imageBitmap = generateGraphBitmap(pointsData)
+
+                    val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
+                    postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
+                },
+                colors = ButtonDefaults.buttonColors(Pink)
+            ) {
+                Text(text = "Zoom In", color = Color.DarkGray)
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Button(
+                onClick = {
+                    start += 1f
+                    end += 1f
+                    pointsData = graphViewModel.evaluateEquation(
+                        equationsHistory.lastOrNull() ?: "",
+                        start,
+                        end
+                    )
+
+                    val imageBitmap = generateGraphBitmap(pointsData)
+
+                    val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
+                    postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
+                },
+                colors = ButtonDefaults.buttonColors(Pink)
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = Color.DarkGray
+                )
+            }
+        }
+
+        LazyColumn(
             modifier = Modifier.padding(vertical = 8.dp)
         ) {
             items(equationsHistory) { equation ->
@@ -75,7 +188,7 @@ fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewMo
         }
 
         Row(
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextField(
@@ -96,6 +209,8 @@ fun GraphPage(map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>>, graphViewMo
                         postViewModel.sendArrayAsPackets(context, myMatrix)
 
                         text = ""
+                        start = -10f
+                        end = 10f
                     }
                 },
                 colors = ButtonDefaults.buttonColors(Pink)
@@ -162,7 +277,13 @@ fun generateGraphBitmap(points: List<Point>): ImageBitmap {
         color = android.graphics.Color.RED
         strokeWidth = 20f
     }
-    canvas.drawLine(padding - 50, graphHeight - paddingY, graphWidth - padding + 50, graphHeight - paddingY, paint) // X-axis
+    canvas.drawLine(
+        padding - 50,
+        graphHeight - paddingY,
+        graphWidth - padding + 50,
+        graphHeight - paddingY,
+        paint
+    ) // X-axis
     canvas.drawLine(paddingX, graphHeight - padding + 50, paddingX, padding - 50, paint) // Y-axis
 
     paint.apply {
@@ -170,10 +291,30 @@ fun generateGraphBitmap(points: List<Point>): ImageBitmap {
         style = Paint.Style.FILL
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
     }
-    canvas.drawText("${maxY.roundToInt()}", paddingX + 25f, padding + 25f, paint)  // Top-left Y label
-    canvas.drawText("${minY.roundToInt()}", paddingX + 25f, graphWidth - padding, paint)  // Bottom-left Y label
-    canvas.drawText("${minX.roundToInt()}", padding - 50f, graphHeight - paddingY - 30f, paint)  // Bottom-left X label
-    canvas.drawText("${maxX.roundToInt()}", graphHeight - padding - 25f, graphHeight - paddingY - 30f, paint)  // Bottom-right X label
+    canvas.drawText(
+        "${maxY.roundToInt()}",
+        paddingX + 25f,
+        padding + 25f,
+        paint
+    )  // Top-left Y label
+    canvas.drawText(
+        "${minY.roundToInt()}",
+        paddingX + 25f,
+        graphWidth - padding,
+        paint
+    )  // Bottom-left Y label
+    canvas.drawText(
+        "${minX.roundToInt()}",
+        padding - 50f,
+        graphHeight - paddingY - 30f,
+        paint
+    )  // Bottom-left X label
+    canvas.drawText(
+        "${maxX.roundToInt()}",
+        graphHeight - padding - 25f,
+        graphHeight - paddingY - 30f,
+        paint
+    )  // Bottom-right X label
 
     val resizedBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
 
@@ -201,7 +342,11 @@ fun Graph(
         }
 
         imageBitmap?.let {
-            Image(bitmap = it, contentDescription = "Graph Image", modifier = modifier.size(432.dp, 432.dp))
+            Image(
+                bitmap = it,
+                contentDescription = "Graph Image",
+                modifier = modifier.size(432.dp, 432.dp)
+            )
         }
     }
 }

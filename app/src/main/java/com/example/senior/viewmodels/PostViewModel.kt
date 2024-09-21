@@ -70,6 +70,15 @@ class PostViewModel : ViewModel() {
         }
     }
 
+    fun sendArrayAsPacketsWithoutStop(context: Context, ledMatrix: List<List<Int>>) {
+        viewModelScope.launch {
+            ledMatrix.mapIndexed { _, row ->
+                Log.d("row", row.toString())
+                async { sendRowWithRetry(row) }
+            }.awaitAll()
+        }
+    }
+
     private suspend fun sendStartEnd(text: String) {
         try {
             val response = postApi.start(text)

@@ -18,11 +18,11 @@ import java.io.InputStreamReader
 
 class GraphViewModel : ViewModel() {
 
-    fun evaluateEquation(equation: String): List<Point> {
+    fun evaluateEquation(equation: String, start: Float = -10f, end: Float = 10f, steps: Int = 101): List<Point> {
         val points = mutableListOf<Point>()
-        val start = -10f    // Starting value
-        val end = 10f     // Ending value
-        val steps = 101   // Number of steps
+//        val start = -10f    // Starting value
+//        val end = 10f     // Ending value
+//        val steps = 101   // Number of steps
 
         val floatArray = FloatArray(steps) { i ->
             start + i * (end - start) / (steps - 1)
@@ -72,7 +72,7 @@ class GraphViewModel : ViewModel() {
         val map: MutableMap<Pair<Int, Int>, List<Pair<Int, Int>>> = mutableMapOf()
 
 
-        val inputStream = LocalContext.current.resources.openRawResource(R.raw.povmask)
+        val inputStream = LocalContext.current.resources.openRawResource(R.raw.test1)
         val inputStreamReader = InputStreamReader(inputStream)
         val bufferedReader = BufferedReader(inputStreamReader)
 
@@ -135,7 +135,7 @@ class GraphViewModel : ViewModel() {
             resMap.put(key, color32Bit)
         }
 
-        val matrix: List<List<Int>> = (0..359).map { i ->
+        val matrix: List<List<Int>> = (0..119).map { i ->
             (1..36).map { j ->
                 if (resMap.containsKey(Pair(j, i))) {
                     resMap[Pair(j, i)] ?: 0
@@ -151,29 +151,29 @@ class GraphViewModel : ViewModel() {
             listOf(index) + list
         }
 
-        val res = result.flatten()
-//            .chunked(37) // Break the list into chunks of 120
-//            .take(360)
-            .chunked(111) // Break the list into chunks of 120
-            .take(120)
+//        val res = result.flatten()
+////            .chunked(37) // Break the list into chunks of 120
+////            .take(360)
+//            .chunked(111) // Break the list into chunks of 120
+//            .take(120)
         for(i in result){
             Log.d("list2", i.toString())
         }
         Log.d("list2", result.size.toString())
         Log.d("list2", result[0].size.toString())
 
-        for(i in res) {
-            Log.d("list3", i.toString())
-        }
-        Log.d("list3", res.size.toString())
-        Log.d("list3", res[0].size.toString())
-
+//        for(i in res) {
+//            Log.d("list3", i.toString())
+//        }
+//        Log.d("list3", res.size.toString())
+//        Log.d("list3", res[0].size.toString())
+//
 
 //        for(i in reshapedList){
 //            Log.d("list", i.toString())
 //
 //        }
 
-        return res
+        return result
     }
 }

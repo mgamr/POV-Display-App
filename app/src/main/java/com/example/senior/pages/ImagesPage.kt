@@ -49,6 +49,7 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
         mutableStateListOf(
             GridElement("Mario", R.drawable.mario, graphViewModel.resizeImage(R.drawable.mario, context)),
             GridElement("Mario2", R.drawable.mario2, graphViewModel.resizeImage(R.drawable.mario2, context)),
+            GridElement("Shield", R.drawable.captain_america_shield, graphViewModel.resizeImage(R.drawable.captain_america_shield, context)),
             GridElement("<3", R.drawable.mari, graphViewModel.resizeImage(R.drawable.mari, context)),
             GridElement("Jiqi", R.drawable.jiqi, graphViewModel.resizeImage(R.drawable.jiqi, context)),
             GridElement("sin(x)", R.drawable.sinx, graphViewModel.resizeImage(R.drawable.sinx, context)),
