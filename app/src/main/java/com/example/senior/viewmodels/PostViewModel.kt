@@ -72,10 +72,12 @@ class PostViewModel : ViewModel() {
 
     fun sendArrayAsPacketsWithoutStop(context: Context, ledMatrix: List<List<Int>>) {
         viewModelScope.launch {
+            sendStartEnd("start_without_stop")
             ledMatrix.mapIndexed { _, row ->
                 Log.d("row", row.toString())
                 async { sendRowWithRetry(row) }
             }.awaitAll()
+            sendStartEnd("end")
         }
     }
 
@@ -115,5 +117,15 @@ class PostViewModel : ViewModel() {
             Log.d("row", row.toString())
         }
         return res
+    }
+
+    fun sendCheckBox(s: String) {
+        viewModelScope.launch {
+            try {
+                postApi.sendCheckBox(s)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }

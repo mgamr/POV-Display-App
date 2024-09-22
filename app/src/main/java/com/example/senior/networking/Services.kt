@@ -38,4 +38,9 @@ interface PostService {
     @Headers("Content-Type: text/plain")
     @POST("/post-data")
     suspend fun ledArrayOn(@Body body: List<Int>): Response<Unit>
+
+    @FormUrlEncoded
+    @POST("/multi-image")
+    suspend fun  sendCheckBox(@Field("checkBox") col: String
+    ): Response<Unit>
 }

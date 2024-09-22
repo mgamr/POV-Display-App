@@ -20,9 +20,6 @@ class GraphViewModel : ViewModel() {
 
     fun evaluateEquation(equation: String, start: Float = -10f, end: Float = 10f, steps: Int = 101): List<Point> {
         val points = mutableListOf<Point>()
-//        val start = -10f    // Starting value
-//        val end = 10f     // Ending value
-//        val steps = 101   // Number of steps
 
         val floatArray = FloatArray(steps) { i ->
             start + i * (end - start) / (steps - 1)
@@ -93,7 +90,7 @@ class GraphViewModel : ViewModel() {
         }
 
         Log.d("GraphPage", "Total entries in map: ${map.size}")
-        Log.d("blaaaa1", map.toString())
+//        Log.d("blaaaa1", map.toString())
         return map
     }
 
@@ -144,10 +141,10 @@ class GraphViewModel : ViewModel() {
                 }
             }
         }
-//        val transposedMatrix: List<List<Int>> = matrix[0].indices.map { col ->
-//            matrix.map { row -> row[col] }
-//        }
-        val result = matrix.mapIndexed { index, list ->
+        val transposedMatrix: List<List<Int>> = matrix[0].indices.map { col ->
+            matrix.map { row -> row[col] }
+        }
+        val result = transposedMatrix.mapIndexed { index, list ->
             listOf(index) + list
         }
 
@@ -156,11 +153,11 @@ class GraphViewModel : ViewModel() {
 ////            .take(360)
 //            .chunked(111) // Break the list into chunks of 120
 //            .take(120)
-        for(i in result){
-            Log.d("list2", i.toString())
-        }
-        Log.d("list2", result.size.toString())
-        Log.d("list2", result[0].size.toString())
+//        for(i in result){
+//            Log.d("list2", i.toString())
+//        }
+//        Log.d("list2", result.size.toString())
+//        Log.d("list2", result[0].size.toString())
 
 //        for(i in res) {
 //            Log.d("list3", i.toString())

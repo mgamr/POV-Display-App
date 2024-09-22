@@ -59,6 +59,8 @@ fun GraphPage(
     val equationsHistory = remember { mutableStateListOf<String>() }
     var pointsData by remember { mutableStateOf<List<Point>>(listOf()) }
 
+    val chosenEquations = remember { mutableStateListOf<ImageBitmap>() }
+
     var start by remember { mutableFloatStateOf(-10f) }
     var end by remember { mutableFloatStateOf(10f) }
 
@@ -78,7 +80,16 @@ fun GraphPage(
 //            val pointsData = graphViewModel.evaluateEquation("y=x+1")
 //            LineChartScreen(pointsData = pointsData)
 //            LineChartScreen()
-            Graph(pointsData, map, graphViewModel)
+            if (equationsHistory.isEmpty()) {
+                val imageBitmap = generateAxisBitmap()
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "Axis Image",
+                    modifier = Modifier.size(432.dp, 432.dp)
+                )
+            } else {
+                Graph(pointsData, map, graphViewModel)
+            }
         }
 
         Row(
@@ -189,7 +200,8 @@ fun GraphPage(
 
         Row(
             horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp)
         ) {
             TextField(
                 value = text,
@@ -200,6 +212,8 @@ fun GraphPage(
                 modifier = Modifier.padding(start = 8.dp),
                 onClick = {
                     if (text.isNotEmpty()) {
+                        postViewModel.sendCheckBox("one")
+
                         equationsHistory.add(text)
                         pointsData = graphViewModel.evaluateEquation(text)
 
@@ -224,6 +238,56 @@ fun GraphPage(
         }
 
     }
+}
+
+fun generateAxisBitmap(): ImageBitmap {
+    val graphWidth = 800f
+    val graphHeight = 800f
+    val padding = 50f
+
+    val targetWidth = 432
+    val targetHeight = 432
+
+    val bitmap = Bitmap.createBitmap(
+        graphWidth.toInt(),
+        graphHeight.toInt(),
+        Bitmap.Config.ARGB_8888
+    )
+    val canvas = android.graphics.Canvas(bitmap)
+    val paint = Paint().apply {
+        isAntiAlias = true
+        color = android.graphics.Color.CYAN
+        strokeWidth = 20f
+        style = Paint.Style.STROKE
+    }
+
+    val maxX = 10f
+    val minX = -10f
+    val minY = -10f
+    val maxY = 10f
+
+    val scaleX = (graphWidth - 2 * padding) / (maxX - minX)
+    val scaleY = (graphHeight - 2 * padding) / (maxY - minY)
+
+    val paddingX = padding - minX * scaleX
+    val paddingY = padding - minY * scaleY
+
+    paint.apply {
+        color = android.graphics.Color.RED
+        strokeWidth = 20f
+    }
+    canvas.drawLine(
+        padding - 50,
+        graphHeight - paddingY,
+        graphWidth - padding + 50,
+        graphHeight - paddingY,
+        paint
+    ) // X-axis
+    canvas.drawLine(paddingX, graphHeight - padding + 50, paddingX, padding - 50, paint) // Y-axis
+
+    val resizedBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+
+    return resizedBitmap.asImageBitmap()
 }
 
 fun generateGraphBitmap(points: List<Point>): ImageBitmap {
