@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -39,6 +37,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -59,7 +58,9 @@ fun GraphPage(
     val equationsHistory = remember { mutableStateListOf<String>() }
     var pointsData by remember { mutableStateOf<List<Point>>(listOf()) }
 
-    val chosenEquations = remember { mutableStateListOf<ImageBitmap>() }
+//    val chosenEquations = remember { mutableStateListOf<ImageBitmap>() }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     var start by remember { mutableFloatStateOf(-10f) }
     var end by remember { mutableFloatStateOf(10f) }
@@ -76,10 +77,6 @@ fun GraphPage(
                 .padding(10.dp)
                 .size(300.dp, 300.dp)
         ) {
-//            LineChartScreen(equationsHistory = equationsHistory, viewModel = graphViewModel, chartLineType = ChartLineType.STRAIGHT)
-//            val pointsData = graphViewModel.evaluateEquation("y=x+1")
-//            LineChartScreen(pointsData = pointsData)
-//            LineChartScreen()
             if (equationsHistory.isEmpty()) {
                 val imageBitmap = generateAxisBitmap()
                 Image(
@@ -111,7 +108,7 @@ fun GraphPage(
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
-                colors = ButtonDefaults.buttonColors(Pink)
+                colors = ButtonDefaults.buttonColors(Pink),
             ) {
                 Icon(
                     Icons.Default.KeyboardArrowLeft,
@@ -119,8 +116,6 @@ fun GraphPage(
                     tint = Color.DarkGray
                 )
             }
-
-            Spacer(modifier = Modifier.width(4.dp))
 
             Button(
                 onClick = {
@@ -136,12 +131,10 @@ fun GraphPage(
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
-                colors = ButtonDefaults.buttonColors(Pink)
+                colors = ButtonDefaults.buttonColors(Pink),
             ) {
                 Text(text = "Zoom Out", color = Color.DarkGray)
             }
-
-            Spacer(modifier = Modifier.width(4.dp))
 
             Button(
                 onClick = {
@@ -158,12 +151,10 @@ fun GraphPage(
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
-                colors = ButtonDefaults.buttonColors(Pink)
+                colors = ButtonDefaults.buttonColors(Pink),
             ) {
                 Text(text = "Zoom In", color = Color.DarkGray)
             }
-
-            Spacer(modifier = Modifier.width(4.dp))
 
             Button(
                 onClick = {
@@ -180,7 +171,7 @@ fun GraphPage(
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
-                colors = ButtonDefaults.buttonColors(Pink)
+                colors = ButtonDefaults.buttonColors(Pink),
             ) {
                 Icon(
                     Icons.Default.KeyboardArrowRight,
@@ -212,13 +203,12 @@ fun GraphPage(
                 modifier = Modifier.padding(start = 8.dp),
                 onClick = {
                     if (text.isNotEmpty()) {
+                        keyboardController?.hide()
                         postViewModel.sendCheckBox("one")
-
                         equationsHistory.add(text)
                         pointsData = graphViewModel.evaluateEquation(text)
 
                         val imageBitmap = generateGraphBitmap(pointsData)
-
                         val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                         postViewModel.sendArrayAsPackets(context, myMatrix)
 

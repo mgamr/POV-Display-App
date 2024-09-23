@@ -69,7 +69,7 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
             GridElement("Stitch 1", R.drawable.stitch_1, graphViewModel.resizeImage(R.drawable.stitch_1, context)),
             GridElement("Stitch 2", R.drawable.stitch_2, graphViewModel.resizeImage(R.drawable.stitch_2, context)),
             GridElement("Stitch 3", R.drawable.stitch_3, graphViewModel.resizeImage(R.drawable.stitch_3, context)),
-            GridElement("Stitch 4", R.drawable.stitch_4, graphViewModel.resizeImage(R.drawable.stitch_4, context))
+            GridElement("Stitch 4", R.drawable.stitch_4, graphViewModel.resizeImage(R.drawable.stitch_4, context)),
         )
     }
 
@@ -93,7 +93,7 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
         }
     )
 
-    Column {
+    Column (modifier = Modifier.padding(bottom = 50.dp)){
         Box(
             modifier = Modifier
                 .fillMaxWidth(),
