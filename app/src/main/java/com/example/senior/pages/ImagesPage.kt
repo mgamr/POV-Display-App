@@ -60,7 +60,7 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
             GridElement("Shield", R.drawable.captain_america_shield, graphViewModel.resizeImage(R.drawable.captain_america_shield, context)),
             GridElement("<3", R.drawable.mari, graphViewModel.resizeImage(R.drawable.mari, context)),
             GridElement("Jiqi", R.drawable.jiqi, graphViewModel.resizeImage(R.drawable.jiqi, context)),
-            GridElement("sin(x)", R.drawable.sinx, graphViewModel.resizeImage(R.drawable.sinx, context)),
+//            GridElement("sin(x)", R.drawable.sinx, graphViewModel.resizeImage(R.drawable.sinx, context)),
             GridElement("jando", R.drawable.jondo, graphViewModel.resizeImage(R.drawable.jondo, context)),
             GridElement("sxila", R.drawable.sxila, graphViewModel.resizeImage(R.drawable.sxila, context)),
             GridElement("kvashuna", R.drawable.kvasho, graphViewModel.resizeImage(R.drawable.kvasho, context)),
@@ -75,18 +75,28 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
 
     var isChecked by remember { mutableStateOf(false) }
 
-    val pickImageLauncher = rememberLauncherForActivityResult(
+    val pickSingleImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             uri?.let {
                 val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
                 val resizedImage = Bitmap.createScaledBitmap(bitmap, 432, 432, true).asImageBitmap()
-
                 val myMatrix = graphViewModel.getPixelFromImage(map, resizedImage)
 
-                if (isChecked) {
-                    postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
-                } else {
+                postViewModel.sendArrayAsPackets(context, myMatrix)
+            }
+        }
+    )
+
+    val pickMultipleImagesLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 4),
+        onResult = { uris ->
+            uris.let {
+                uris.forEach { uri ->
+                    val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                    val resizedImage = Bitmap.createScaledBitmap(bitmap, 432, 432, true).asImageBitmap()
+                    val myMatrix = graphViewModel.getPixelFromImage(map, resizedImage)
+
                     postViewModel.sendArrayAsPackets(context, myMatrix)
                 }
             }
@@ -177,9 +187,15 @@ fun GridView(context: Context, postViewModel: PostViewModel, graphViewModel: Gra
                     modifier = Modifier
                         .padding(8.dp)
                         .clickable {
-                            pickImageLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
+                            if (isChecked) {
+                                pickMultipleImagesLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            } else {
+                                pickSingleImageLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }
                         },
                     colors = CardDefaults.cardColors(
                         containerColor = LightLightPink,

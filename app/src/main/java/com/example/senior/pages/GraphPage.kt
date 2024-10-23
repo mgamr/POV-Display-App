@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -103,12 +101,13 @@ fun GraphPage(
                         end
                     )
 
-                    val imageBitmap = generateGraphBitmap(pointsData)
+                    val imageBitmap = generateGraphBitmapWithoutLabels(pointsData)
 
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
                 colors = ButtonDefaults.buttonColors(Pink),
+                modifier = Modifier.weight(0.5f)
             ) {
                 Icon(
                     Icons.Default.KeyboardArrowLeft,
@@ -127,11 +126,12 @@ fun GraphPage(
                         end
                     )
 
-                    val imageBitmap = generateGraphBitmap(pointsData)
+                    val imageBitmap = generateGraphBitmapWithoutLabels(pointsData)
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
                 colors = ButtonDefaults.buttonColors(Pink),
+                modifier = Modifier.weight(1.1f)
             ) {
                 Text(text = "Zoom Out", color = Color.DarkGray)
             }
@@ -146,12 +146,13 @@ fun GraphPage(
                         end
                     )
 
-                    val imageBitmap = generateGraphBitmap(pointsData)
+                    val imageBitmap = generateGraphBitmapWithoutLabels(pointsData)
 
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
                 colors = ButtonDefaults.buttonColors(Pink),
+                modifier = Modifier.weight(1f)
             ) {
                 Text(text = "Zoom In", color = Color.DarkGray)
             }
@@ -166,12 +167,13 @@ fun GraphPage(
                         end
                     )
 
-                    val imageBitmap = generateGraphBitmap(pointsData)
+                    val imageBitmap = generateGraphBitmapWithoutLabels(pointsData)
 
                     val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                     postViewModel.sendArrayAsPacketsWithoutStop(context, myMatrix)
                 },
                 colors = ButtonDefaults.buttonColors(Pink),
+                modifier = Modifier.weight(0.5f)
             ) {
                 Icon(
                     Icons.Default.KeyboardArrowRight,
@@ -181,13 +183,15 @@ fun GraphPage(
             }
         }
 
-        LazyColumn(
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            items(equationsHistory) { equation ->
-                Text(text = equation)
-            }
-        }
+//        LazyColumn(
+//            modifier = Modifier.padding(vertical = 8.dp)
+//        ) {
+//            items(equationsHistory) { equation ->
+//                Text(text = equation)
+//            }
+//        }
+
+        equationsHistory.lastOrNull()?.let { Text(text = it,  modifier = Modifier.padding(vertical = 8.dp)) }
 
         Row(
             horizontalArrangement = Arrangement.End,
@@ -208,7 +212,7 @@ fun GraphPage(
                         equationsHistory.add(text)
                         pointsData = graphViewModel.evaluateEquation(text)
 
-                        val imageBitmap = generateGraphBitmap(pointsData)
+                        val imageBitmap = generateGraphBitmapWithoutLabels(pointsData)
                         val myMatrix = graphViewModel.getPixelFromImage(map, imageBitmap)
                         postViewModel.sendArrayAsPackets(context, myMatrix)
 
@@ -278,6 +282,115 @@ fun generateAxisBitmap(): ImageBitmap {
     val resizedBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
 
     return resizedBitmap.asImageBitmap()
+}
+
+fun drawGraph(
+    points: List<Point>,
+    withLabels: Boolean
+): Bitmap {
+    val graphWidth = 800f
+    val graphHeight = 800f
+    val padding = 50f
+
+    val targetWidth = 432
+    val targetHeight = 432
+
+    val bitmap = Bitmap.createBitmap(
+        graphWidth.toInt(),
+        graphHeight.toInt(),
+        Bitmap.Config.ARGB_8888
+    )
+    val canvas = android.graphics.Canvas(bitmap)
+    val paint = Paint().apply {
+        isAntiAlias = true
+        color = android.graphics.Color.CYAN
+        strokeWidth = 20f
+        style = Paint.Style.STROKE
+    }
+
+    val maxX = points.maxOf { it.x }
+    val minX = points.minOf { it.x }
+    val minY = points.minOf { it.y }
+    val maxY = points.maxOf { it.y }
+
+    val scaleX = (graphWidth - 2 * padding) / (maxX - minX)
+    val scaleY = (graphHeight - 2 * padding) / (maxY - minY)
+
+    val paddingX = padding - minX * scaleX
+    val paddingY = padding - minY * scaleY
+
+    val androidPath = android.graphics.Path()
+
+    points.forEachIndexed { index, point ->
+        val x = paddingX + point.x * scaleX
+        val y = graphHeight - (paddingY + point.y * scaleY) // Flip y-axis
+
+        if (index == 0) {
+            androidPath.moveTo(x, y)
+        } else {
+            androidPath.lineTo(x, y)
+        }
+    }
+
+    canvas.drawPath(androidPath, paint)
+
+    paint.apply {
+        color = android.graphics.Color.RED
+        strokeWidth = 20f
+    }
+    canvas.drawLine(
+        padding - 50,
+        graphHeight - paddingY,
+        graphWidth - padding + 50,
+        graphHeight - paddingY,
+        paint
+    ) // X-axis
+    canvas.drawLine(paddingX, graphHeight - padding + 50, paddingX, padding - 50, paint) // Y-axis
+
+    // Only draw labels if withLabels is true
+    if (withLabels) {
+        paint.apply {
+            textSize = 70f
+            style = Paint.Style.FILL
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+        canvas.drawText(
+            "${maxY.roundToInt()}",
+            paddingX + 25f,
+            padding + 25f,
+            paint
+        )  // Top-left Y label
+        canvas.drawText(
+            "${minY.roundToInt()}",
+            paddingX + 25f,
+            graphWidth - padding,
+            paint
+        )  // Bottom-left Y label
+        canvas.drawText(
+            "${minX.roundToInt()}",
+            padding - 50f,
+            graphHeight - paddingY - 30f,
+            paint
+        )  // Bottom-left X label
+        canvas.drawText(
+            "${maxX.roundToInt()}",
+            graphHeight - padding - 25f,
+            graphHeight - paddingY - 30f,
+            paint
+        )  // Bottom-right X label
+    }
+
+    return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+}
+
+fun generateGraphBitmapWithLabels(points: List<Point>): ImageBitmap {
+    val bitmap = drawGraph(points, withLabels = true)
+    return bitmap.asImageBitmap()
+}
+
+fun generateGraphBitmapWithoutLabels(points: List<Point>): ImageBitmap {
+    val bitmap = drawGraph(points, withLabels = false)
+    return bitmap.asImageBitmap()
 }
 
 fun generateGraphBitmap(points: List<Point>): ImageBitmap {
@@ -392,7 +505,7 @@ fun Graph(
 
     if (points.isNotEmpty()) {
         LaunchedEffect(points) {
-            imageBitmap = generateGraphBitmap(points)
+            imageBitmap = generateGraphBitmapWithLabels(points)
         }
 
         imageBitmap?.let {
